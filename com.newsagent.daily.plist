@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.newsagent.daily</string>
+
+  <!-- Python 解释器 + 脚本 -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/zhouzixu/miniconda3/envs/tradingagents/bin/python</string>
+    <string>/Users/zhouzixu/ProjectCode/NewsAgent/run_daily.py</string>
+  </array>
+
+  <!-- 工作目录 -->
+  <key>WorkingDirectory</key>
+  <string>/Users/zhouzixu/ProjectCode/NewsAgent</string>
+
+  <!-- 每天 08:00 触发 -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>8</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <!-- 日志 -->
+  <key>StandardOutPath</key>
+  <string>/Users/zhouzixu/ProjectCode/NewsAgent/logs/daily.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/zhouzixu/ProjectCode/NewsAgent/logs/daily_error.log</string>
+
+  <!-- PATH 确保 git 可用 -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:/Users/zhouzixu/miniconda3/envs/tradingagents/bin</string>
+    <key>HOME</key>
+    <string>/Users/zhouzixu</string>
+  </dict>
+
+  <!-- 登录后立即加载，如果错过则不立刻补跑 -->
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>
