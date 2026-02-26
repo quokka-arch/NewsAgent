@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🌐 政治舆情简报 · 2026-02-26</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #080c12;
+  --surface: #0f1620;
+  --surface2: #151e2b;
+  --border: #1e2d3d;
+  --text: #d4e1f0;
+  --muted: #6a849e;
+  --red: #f85149;
+  --orange: #e3a04f;
+  --green: #3fb950;
+  --blue: #58a6ff;
+  --purple: #bc8cff;
+  --teal: #39d5c9;
+  --glow-red: rgba(248,81,73,.25);
+  --glow-blue: rgba(88,166,255,.15);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.6; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,12,18,.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between; height: 56px;
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+.nav-brand .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em; }
+.nav-brand .badge-pill { background: var(--glow-red); color: var(--red); border: 1px solid var(--red); padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 600; }
+.nav-meta { color: var(--muted); font-size: .8rem; }
+.nav-links { display: flex; gap: 20px; }
+.nav-links a { color: var(--muted); font-size: .82rem; transition: color .2s; }
+.nav-links a:hover { color: var(--text); text-decoration: none; }
+
+/* ── LAYOUT ── */
+.page { max-width: 1440px; margin: 0 auto; padding: 28px 32px; }
+
+/* ── STAT CARDS ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+@media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px)  { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, transform .2s;
+}
+.stat-card:hover { border-color: #2e4a66; transform: translateY(-2px); }
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.stat-card.total::before { background: linear-gradient(90deg,var(--blue),var(--purple)); }
+.stat-card.high::before  { background: var(--red); }
+.stat-card.medium::before{ background: var(--orange); }
+.stat-card.low::before   { background: var(--green); }
+.stat-card.country::before{ background: var(--teal); }
+.stat-card.neg::before   { background: var(--purple); }
+.stat-card .icon { font-size: 1.6rem; margin-bottom: 8px; display: block; }
+.stat-card .num { font-size: 2.2rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+.stat-card .lbl { color: var(--muted); font-size: .78rem; margin-top: 6px; }
+.stat-card.total  .num { color: var(--blue); }
+.stat-card.high   .num { color: var(--red); }
+.stat-card.medium .num { color: var(--orange); }
+.stat-card.low    .num { color: var(--green); }
+.stat-card.country.num { color: var(--teal); }
+.stat-card.neg    .num { color: var(--purple); }
+
+/* ── SENTIMENT METER ── */
+.senti-meter-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+}
+.senti-meter-title { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+.senti-track-big { flex: 1; min-width: 200px; height: 10px; background: linear-gradient(to right, #f85149, #e3a04f 40%, #3fb950); border-radius: 5px; position: relative; }
+.senti-needle { position: absolute; top: -5px; width: 4px; height: 20px; background: white; border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 8px rgba(255,255,255,.6); transition: left .8s cubic-bezier(.34,1.56,.64,1); }
+
+/* ── CHART GRID ── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+@media (max-width: 1100px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px)  { .charts-grid { grid-template-columns: 1fr; } }
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: border-color .2s;
+}
+.chart-card:hover { border-color: #2e4a66; }
+.chart-card.wide { grid-column: span 2; }
+@media (max-width: 1100px) { .chart-card.wide { grid-column: span 1; } }
+.card-title {
+  font-size: .72rem; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .1em;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 6px;
+}
+.card-title .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* ── CONFLICT TABLE ── */
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.section-hd {
+  font-size: 1rem; font-weight: 700;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-hd .sub { font-size: .75rem; color: var(--muted); font-weight: 400; }
+table.dtable { width: 100%; border-collapse: collapse; font-size: .83rem; }
+table.dtable th {
+  background: var(--surface2); color: var(--muted);
+  text-align: left; padding: 9px 12px;
+  font-weight: 500; white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+table.dtable td { padding: 9px 12px; border-bottom: 1px solid #131c26; vertical-align: middle; }
+table.dtable tr:hover td { background: var(--surface2); }
+.heat-bar { width: 100%; height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 3px; }
+.heat-fill { height: 4px; border-radius: 2px; }
+.flag-pair { display: flex; align-items: center; gap: 4px; }
+.vs { color: var(--muted); padding: 0 4px; }
+
+/* ── NEWS TABLE ── */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.fbtn {
+  padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--muted); font-size: .78rem;
+  cursor: pointer; transition: all .15s;
+}
+.fbtn:hover, .fbtn.active { color: var(--text); border-color: var(--blue); background: var(--glow-blue); }
+.fbtn.active.h { border-color: var(--red);  background: rgba(248,81,73,.1);  color: var(--red); }
+.fbtn.active.m { border-color: var(--orange); background: rgba(227,160,79,.1); color: var(--orange); }
+.fbtn.active.l { border-color: var(--green); background: rgba(63,185,80,.1);  color: var(--green); }
+.search-box {
+  margin-left: auto;
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text); font-size: .8rem; outline: none; width: 200px;
+  transition: border-color .2s;
+}
+.search-box:focus { border-color: var(--blue); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .72rem; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
+.badge.high   { background: rgba(248,81,73,.15);  color: var(--red);    border: 1px solid rgba(248,81,73,.4); }
+.badge.medium { background: rgba(227,160,79,.15); color: var(--orange); border: 1px solid rgba(227,160,79,.4); }
+.badge.low    { background: rgba(63,185,80,.15);  color: var(--green);  border: 1px solid rgba(63,185,80,.4); }
+.ntitle { font-size: .84rem; }
+.src { color: var(--muted); font-size: .76rem; white-space: nowrap; }
+.ts  { color: var(--muted); font-size: .76rem; white-space: nowrap; }
+.dim { color: var(--muted); }
+.ctags { white-space: nowrap; }
+.ctag {
+  display: inline-block; background: rgba(88,166,255,.1); color: var(--blue);
+  border-radius: 3px; padding: 1px 5px; font-size: .72rem; margin: 1px 2px;
+}
+.senti-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 80px; }
+.senti-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.senti-fill  { height: 3px; border-radius: 2px; transition: width .4s; }
+
+/* ── FOOTER ── */
+footer { text-align: center; color: var(--muted); font-size: .76rem; padding: 32px; border-top: 1px solid var(--border); margin-top: 8px; }
+footer a { color: var(--muted); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── ANIMATED COUNTER ── */
+@keyframes countUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.num { animation: countUp .5s ease both; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <span class="logo">🌐 NewsAgent</span>
+    <span class="badge-pill">LIVE</span>
+  </div>
+  <div class="nav-links">
+    <a href="#overview">总览</a>
+    <a href="#charts">图表</a>
+    <a href="#conflict">冲突矩阵</a>
+    <a href="#news">新闻快讯</a>
+  </div>
+  <div class="nav-meta">监控窗口 24h · 生成于 2026-02-26 14:38:09</div>
+</nav>
+
+<div class="page">
+
+  <!-- STAT CARDS -->
+  <div id="overview" class="stats-grid">
+    <div class="stat-card total">
+      <span class="icon">📰</span>
+      <div class="num">175</div>
+      <div class="lbl">抓取条目总数</div>
+    </div>
+    <div class="stat-card high">
+      <span class="icon">🔴</span>
+      <div class="num">21</div>
+      <div class="lbl">高风险 (12%)</div>
+    </div>
+    <div class="stat-card medium">
+      <span class="icon">🟠</span>
+      <div class="num">55</div>
+      <div class="lbl">中风险 (31%)</div>
+    </div>
+    <div class="stat-card low">
+      <span class="icon">🟢</span>
+      <div class="num">99</div>
+      <div class="lbl">低风险 (57%)</div>
+    </div>
+    <div class="stat-card country">
+      <span class="icon">🌍</span>
+      <div class="num" style="color:var(--teal)">10</div>
+      <div class="lbl">涉及国家/地区</div>
+    </div>
+    <div class="stat-card neg">
+      <span class="icon">😟</span>
+      <div class="num" style="color:var(--purple)">109</div>
+      <div class="lbl">负面情绪条目</div>
+    </div>
+  </div>
+
+  <!-- SENTIMENT METER -->
+  <div class="senti-meter-card">
+    <div>
+      <div class="senti-meter-title">整体情绪指数</div>
+      <div style="font-size:1.5rem;font-weight:700;color:#fa8c16">负面 &nbsp;<span style="font-size:.9rem">-0.320</span></div>
+    </div>
+    <div style="flex:1;min-width:220px">
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:4px"><span>极负面 −1</span><span>中性</span><span>极正面 +1</span></div>
+      <div class="senti-track-big">
+        <div class="senti-needle" id="sentiNeedle" style="left:34%"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="text-align:center"><div style="font-size:1.2rem;font-weight:700;color:var(--red)">21</div><div style="font-size:.72rem;color:var(--muted)">高风险</div></div>
+      <div style="text-align:center"><div style="font-size:1.2rem;font-weight:700;color:var(--orange)">55</div><div style="font-size:.72rem;color:var(--muted)">中风险</div></div>
+      <div style="text-align:center"><div style="font-size:1.2rem;font-weight:700;color:var(--green)">99</div><div style="font-size:.72rem;color:var(--muted)">低风险</div></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div id="charts" class="charts-grid">
+
+    <!-- Risk Donut -->
+    <div class="chart-card">
+      <div class="card-title"><div class="dot" style="background:var(--red)"></div>风险等级分布</div>
+      <canvas id="riskChart" height="220"></canvas>
+    </div>
+
+    <!-- Country Bar -->
+    <div class="chart-card wide">
+      <div class="card-title"><div class="dot" style="background:var(--blue)"></div>高频国家 / 地区 Top 10</div>
+      <canvas id="countryChart" height="220"></canvas>
+    </div>
+
+    <!-- Source Donut -->
+    <div class="chart-card">
+      <div class="card-title"><div class="dot" style="background:var(--teal)"></div>新闻来源分布</div>
+      <canvas id="sourceChart" height="220"></canvas>
+    </div>
+
+    <!-- Topic Radar -->
+    <div class="chart-card">
+      <div class="card-title"><div class="dot" style="background:var(--purple)"></div>议题主题分布</div>
+      <canvas id="topicChart" height="220"></canvas>
+    </div>
+
+    <!-- Source Bar -->
+    <div class="chart-card">
+      <div class="card-title"><div class="dot" style="background:var(--orange)"></div>来源条目数量</div>
+      <canvas id="sourceBarChart" height="220"></canvas>
+    </div>
+
+  </div>
+
+  <!-- CONFLICT MATRIX -->
+  <div id="conflict" class="section-card">
+    <div class="section-hd">⚡ 国家冲突矩阵 <span class="sub">高/中风险文章中国家共现频率排序</span></div>
+    <div style="overflow-x:auto">
+      <table class="dtable">
+        <thead>
+          <tr>
+            <th>#</th><th>冲突方</th><th>共现次数</th><th>均风险</th><th>均情绪</th><th>矛盾焦点</th>
+          </tr>
+        </thead>
+        <tbody>
+<tr>
+  <td class="dim" style="text-align:center">1</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇬🇧<strong>英国</strong>
+    <span class="vs">↔</span>
+    🇺🇸<strong>美国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:100%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">19</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.1</td>
+  <td style="text-align:center;color:#fa8c16;font-weight:600">-0.54</td>
+  <td class="dim" style="font-size:.8rem">外交 · 军事冲突</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">2</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇮🇷<strong>伊朗</strong>
+    <span class="vs">↔</span>
+    🇺🇸<strong>美国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:100%;background:var(--red)"></div></div>
+    <span style="font-weight:700">15</span>
+  </td>
+  <td style="text-align:center;color:var(--red);font-weight:700">🔴 6.5</td>
+  <td style="text-align:center;color:#fa8c16;font-weight:600">-0.37</td>
+  <td class="dim" style="font-size:.8rem">外交 · 军事冲突</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">3</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇺🇦<strong>乌克兰</strong>
+    <span class="vs">↔</span>
+    🇬🇧<strong>英国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:66%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">10</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.0</td>
+  <td style="text-align:center;color:#ff4d4d;font-weight:600">-0.69</td>
+  <td class="dim" style="font-size:.8rem">外交 · 军事冲突</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">4</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇺🇦<strong>乌克兰</strong>
+    <span class="vs">↔</span>
+    🇺🇸<strong>美国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:53%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">8</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.5</td>
+  <td style="text-align:center;color:#ff4d4d;font-weight:600">-0.82</td>
+  <td class="dim" style="font-size:.8rem">军事冲突 · 外交</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">5</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇷🇺<strong>俄罗斯</strong>
+    <span class="vs">↔</span>
+    🇺🇦<strong>乌克兰</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:46%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">7</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.6</td>
+  <td style="text-align:center;color:#ff4d4d;font-weight:600">-0.84</td>
+  <td class="dim" style="font-size:.8rem">军事冲突 · 外交</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">6</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇷🇺<strong>俄罗斯</strong>
+    <span class="vs">↔</span>
+    🇬🇧<strong>英国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:46%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">7</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.6</td>
+  <td style="text-align:center;color:#ff4d4d;font-weight:600">-0.84</td>
+  <td class="dim" style="font-size:.8rem">军事冲突 · 外交</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">7</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇷🇺<strong>俄罗斯</strong>
+    <span class="vs">↔</span>
+    🇺🇸<strong>美国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:46%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">7</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.6</td>
+  <td style="text-align:center;color:#ff4d4d;font-weight:600">-0.84</td>
+  <td class="dim" style="font-size:.8rem">军事冲突 · 外交</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">8</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇮🇱<strong>以色列</strong>
+    <span class="vs">↔</span>
+    🇺🇸<strong>美国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:40%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">6</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.5</td>
+  <td style="text-align:center;color:#ff4d4d;font-weight:600">-0.63</td>
+  <td class="dim" style="font-size:.8rem">军事冲突 · 外交</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">9</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇮🇱<strong>以色列</strong>
+    <span class="vs">↔</span>
+    🇵🇸<strong>巴勒斯坦</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:40%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">6</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.5</td>
+  <td style="text-align:center;color:#fa8c16;font-weight:600">-0.53</td>
+  <td class="dim" style="font-size:.8rem">军事冲突 · 外交</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">10</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇨🇳<strong>中国</strong>
+    <span class="vs">↔</span>
+    🇬🇧<strong>英国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:33%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">5</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.4</td>
+  <td style="text-align:center;color:#fa8c16;font-weight:600">-0.42</td>
+  <td class="dim" style="font-size:.8rem">外交 · 军事冲突</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">11</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇨🇳<strong>中国</strong>
+    <span class="vs">↔</span>
+    🇺🇸<strong>美国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:33%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">5</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.0</td>
+  <td style="text-align:center;color:#fa8c16;font-weight:600">-0.32</td>
+  <td class="dim" style="font-size:.8rem">军事冲突 · 外交</td>
+</tr>
+
+<tr>
+  <td class="dim" style="text-align:center">12</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">🇵🇸<strong>巴勒斯坦</strong>
+    <span class="vs">↔</span>
+    🇺🇸<strong>美国</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:26%;background:var(--orange)"></div></div>
+    <span style="font-weight:700">4</span>
+  </td>
+  <td style="text-align:center;color:var(--orange);font-weight:700">🟠 5.0</td>
+  <td style="text-align:center;color:#fa8c16;font-weight:600">-0.49</td>
+  <td class="dim" style="font-size:.8rem">军事冲突 · 外交</td>
+</tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- NEWS TABLE -->
+  <div id="news" class="section-card">
+    <div class="section-hd">🔥 高/中风险新闻 Top 30</div>
+    <div class="filter-bar">
+      <button class="fbtn active" onclick="filterNews('ALL',this)">全部</button>
+      <button class="fbtn h"      onclick="filterNews('HIGH',this)">🔴 高风险</button>
+      <button class="fbtn m"      onclick="filterNews('MEDIUM',this)">🟠 中风险</button>
+      <button class="fbtn l"      onclick="filterNews('LOW',this)">🟢 低风险</button>
+      <input class="search-box" type="text" placeholder="搜索标题 / 来源…" oninput="searchNews(this.value)" />
+    </div>
+    <div style="overflow-x:auto">
+      <table class="dtable" id="newsTable">
+        <thead>
+          <tr>
+            <th>#</th><th>标题</th><th>来源</th><th>风险</th><th>情绪</th><th>相关国家</th><th>时间(UTC)</th>
+          </tr>
+        </thead>
+        <tbody id="newsTbody">
+          <tr class="nr" data-risk="HIGH">
+  <td class="dim">1</td>
+  <td><a href="https://news.google.com/rss/articles/CBMiowFBVV95cUxONmxmQ2FEeHg3SWdNSXNJdUNQMUR3WWZYNnFfRWZqSHc3UDZlUF85UFhIRVZuZmI1bHExc21fdGN1cmNuVkJuWmFXSjNLS0ROOVdmVWNmaFQtel9YcXpVb1lSLWh1RktUd0ZQZmtUR0k2anEyNXpVc1hHZzZSb1BvcWlTM2RMVnNXUldIRFFHNk0wZWVVZ2pZYkUtbFdiREdUai1n?oc=5" target="_blank" class="ntitle">North Korea warns it could destroy South if threatened, but leaves door open for US dialog</a></td>
+  <td class="src">GNews World</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:4%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.92</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇬🇧 英国</span></td>
+  <td class="ts">02-26 03:38</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">2</td>
+  <td><a href="https://www.dw.com/en/us-rubio-and-vance-warn-of-iran-s-threat-ahead-of-talks/a-76128226?maca=en-rss-en-world-4025-rdf" target="_blank" class="ntitle">US: Rubio and Vance warn of Iran&#x27;s threat ahead of talks</a></td>
+  <td class="src">DW English</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:11%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.78</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-26 03:15</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">3</td>
+  <td><a href="https://www.theguardian.com/world/2026/feb/25/spanish-officer-led-1981-coup-dies-day-documents-declassified-antonio-tejero" target="_blank" class="ntitle">Spanish officer who led 1981 coup dies on day documents declassified</a></td>
+  <td class="src">The Guardian</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:3%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.93</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span></td>
+  <td class="ts">02-25 20:18</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">4</td>
+  <td><a href="https://www.theguardian.com/world/2026/feb/25/cuba-says-border-guards-killed-four-gunmen-on-us-registered-speedboat" target="_blank" class="ntitle">Cuba says it killed heavily armed exiles who attacked from US-registered speedboat</a></td>
+  <td class="src">The Guardian</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:1%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.98</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span></td>
+  <td class="ts">02-26 03:21</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">5</td>
+  <td><a href="https://www.aljazeera.com/news/liveblog/2026/2/26/us-iran-talks-live-nuclear-talks-to-kick-off-in-geneva-amid-tensions?traffic_source=rss" target="_blank" class="ntitle">US-Iran talks live: Nuclear talks to kick off in Geneva amid tensions</a></td>
+  <td class="src">Al Jazeera</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#fa8c16;font-size:.78rem;font-weight:600">负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:29%;background:#fa8c16"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.40</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-26 05:09</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">6</td>
+  <td><a href="https://news.google.com/rss/articles/CBMiyAFBVV95cUxPOUNsQ3FDckstNXp3OTZ0TDNfWi1tMHVqRTY2NmF2UHNpb1k2aXBuNkN0UTdQOVhTckZBUGk3Z3JHTDJ3SGc4RjJyekxHelU2b3ZxN3hZMTE0aTBjb2lUbE5QWEdSMWZrRkJoeWZHcUItN212TVNGSXBDdWlzYkRrUVFNUC0wSjNpS2E5Zm1yRVZnZEZGRTFWcVA3bWg3bWhFckViOXpaWl9US2wySEIwN1Q1UjhzLTVWTmVoQjBHeV9oYmVVUlM2MQ?oc=5" target="_blank" class="ntitle">Exclusive: Saudi Arabia boosts oil output, exports for US attack on Iran contingency, sour</a></td>
+  <td class="src">GNews World</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:6%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.87</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇨🇳 中国</span> <span class="ctag">🇮🇷 伊朗</span> <span class="ctag">🇬🇧 英国</span></td>
+  <td class="ts">02-25 14:17</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">7</td>
+  <td><a href="https://www.nytimes.com/2026/02/25/world/iran-nuclear-talks-trump-war-maduro.html" target="_blank" class="ntitle">A Last Chance Before War</a></td>
+  <td class="src">NYTimes World</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:9%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.81</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-26 05:50</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">8</td>
+  <td><a href="https://www.dw.com/en/fear-over-potential-us-strike-on-iran-puts-lebanon-on-edge/a-76121309?maca=en-rss-en-world-4025-rdf" target="_blank" class="ntitle">Fear over potential US strike on Iran puts Lebanon on edge</a></td>
+  <td class="src">DW English</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:1%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.97</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇱 以色列</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-26 05:25</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">9</td>
+  <td><a href="https://www.aljazeera.com/news/2026/2/26/north-koreas-kim-jong-un-warns-south-korea-says-us-should-end-hostility?traffic_source=rss" target="_blank" class="ntitle">North Korea’s Kim Jong Un warns South Korea, says US should end hostility</a></td>
+  <td class="src">Al Jazeera</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#fa8c16;font-size:.78rem;font-weight:600">负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:20%;background:#fa8c16"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.60</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇰🇷 韩国</span></td>
+  <td class="ts">02-26 04:31</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">10</td>
+  <td><a href="https://www.theguardian.com/media/2026/feb/25/record-number-journalists-killed-2025-israel-gaza-war" target="_blank" class="ntitle">Israel responsible for two-thirds of record 129 press killings in 2025, says CPJ</a></td>
+  <td class="src">The Guardian</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:2%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.94</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇮🇱 以色列</span> <span class="ctag">🇵🇸 巴勒斯坦</span></td>
+  <td class="ts">02-25 19:24</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">11</td>
+  <td><a href="https://news.google.com/rss/articles/CBMipwFBVV95cUxPd1QwRGFnUzhKcWJQNjF0RkkwZzRhVnZyNmtjUjU5MDJEZ0NMMGFEM3JjbmJiMUNLeGEtcXVZUlczeFlqWWZaZlc5OWtOMVFxWGZJaG5FZGpGa3JCWGVYMmpweXF4Z25fdkl4VDR4TDJxZWgwZjg2QXpkSlJhbEJnSHB1cy13TEJYOVpZWFBFQlk0SFVyQXFpemxEZ0JSTzd4dEoyOHhhNNIBrAFBVV95cUxNWWpmWGpPUWVLUHpQcWU4NDhvVWRxLWFOaVdiRWQ5LXZha1FETmZPXzVsc2JkX1czQldrVS1SMU8wOVVEc09sWDE0Nm5pQ3dHZG9Fc1B6MTYtRER1R04tMERURGpHMmJPODljZ3NIbWEzZWxlVURUSVMwX1JNeXo0T21pX2VrM25QSXJheWVYenRBbzNKX0QxcVZVendsMkNrUXRfUEM2MDl2RDZj?oc=5" target="_blank" class="ntitle">How Putin stays strong in Russia, four years into war in Ukraine - Al Jazeera</a></td>
+  <td class="src">GNews World</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:2%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.95</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇷🇺 俄罗斯</span> <span class="ctag">🇺🇦 乌克兰</span> <span class="ctag">🇬🇧 英国</span></td>
+  <td class="ts">02-25 12:55</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">12</td>
+  <td><a href="https://news.google.com/rss/articles/CBMitgFBVV95cUxNSUhkb2hadzdXVGMzdlJMVy1pc1loWEVQZC02QWlpb1B3NjIwam1EeWtRWHo0WTQtTFV1SE83SHFsVldraEJpRHZhVWtOZ05QZlRuMTVyeVlTcGRVVHFoVEFSVXNLLWg5eUhFWHJPWkxXREt0UEdvQy1MYXhCUGhYcWVkYm5uSlkwNHQ2bF9DcjNVWVFOeVU0VlppR1VOQlY2RGVSbm1ackNvM0VRYmRYVEVsSHVUUQ?oc=5" target="_blank" class="ntitle">Pakistan wary of militant attacks after Afghanistan air strikes - Reuters</a></td>
+  <td class="src">GNews World</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:8%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.83</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span></td>
+  <td class="ts">02-25 11:51</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">13</td>
+  <td><a href="https://www.france24.com/en/middle-east/20260226-live-us-iran-third-round-talks-trump-warships-mideast" target="_blank" class="ntitle">Live: US-Iran to hold third round of talks as Trump deploys warships in Mideast</a></td>
+  <td class="src">France24</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#fa8c16;font-size:.78rem;font-weight:600">负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:25%;background:#fa8c16"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.49</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-26 06:07</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">14</td>
+  <td><a href="https://www.nytimes.com/2026/02/26/world/middleeast/iran-us-nuclear-talks.html" target="_blank" class="ntitle">A Deal or War? Crucial Talks to Begin Between U.S. and Iran</a></td>
+  <td class="src">NYTimes World</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#fa8c16;font-size:.78rem;font-weight:600">负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:38%;background:#fa8c16"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.24</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-26 05:00</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">15</td>
+  <td><a href="https://www.bbc.com/news/articles/cvg1vd95nl9o?at_medium=RSS&amp;at_campaign=rss" target="_blank" class="ntitle">US and Iran to hold talks as pressure for nuclear deal builds</a></td>
+  <td class="src">BBC World</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#52c41a;font-size:.78rem;font-weight:600">正面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:71%;background:#52c41a"></div></div>
+      <span class="dim" style="font-size:.72rem">+0.42</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-26 00:09</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">16</td>
+  <td><a href="https://www.theguardian.com/world/2026/feb/25/us-iran-nuclear-talks-critical-stage-trump" target="_blank" class="ntitle">Iran enters critical nuclear talks with US insisting deal is within reach</a></td>
+  <td class="src">The Guardian</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#52c41a;font-size:.78rem;font-weight:600">正面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:72%;background:#52c41a"></div></div>
+      <span class="dim" style="font-size:.72rem">+0.45</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-25 23:49</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">17</td>
+  <td><a href="https://www.nytimes.com/2026/02/25/world/europe/antonio-tejero-molina-dead.html" target="_blank" class="ntitle">Antonio Tejero Molina, 93, Dies; Spanish Colonel Led Failed Coup</a></td>
+  <td class="src">NYTimes World</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#8c8c8c;font-size:.78rem;font-weight:600">中性</span>
+      <div class="senti-track"><div class="senti-fill" style="width:58%;background:#8c8c8c"></div></div>
+      <span class="dim" style="font-size:.72rem">+0.18</span>
+    </div>
+  </td>
+  <td class="ctags">—</td>
+  <td class="ts">02-25 22:43</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">18</td>
+  <td><a href="https://www.france24.com/en/berlinale-executives-summoned-over-film-director-s-anti-israel-speech" target="_blank" class="ntitle">Berlinale executives summoned over film director&#x27;s anti-Israel speech</a></td>
+  <td class="src">France24</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#8c8c8c;font-size:.78rem;font-weight:600">中性</span>
+      <div class="senti-track"><div class="senti-fill" style="width:52%;background:#8c8c8c"></div></div>
+      <span class="dim" style="font-size:.72rem">+0.05</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇱 以色列</span> <span class="ctag">🇵🇸 巴勒斯坦</span> <span class="ctag">🇫🇷 法国</span></td>
+  <td class="ts">02-25 22:30</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">19</td>
+  <td><a href="https://www.france24.com/en/zimbabwe-ends-health-funding-talks-with-us" target="_blank" class="ntitle">Senegal PM vows to double penalty for same-sex relations</a></td>
+  <td class="src">France24</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:1%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.96</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇷🇺 俄罗斯</span> <span class="ctag">🇺🇦 乌克兰</span> <span class="ctag">🇬🇧 英国</span></td>
+  <td class="ts">02-25 21:44</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">20</td>
+  <td><a href="https://www.dw.com/en/us-iran-nuclear-talks-deal-or-military-strike/a-76120548?maca=en-rss-en-world-4025-rdf" target="_blank" class="ntitle">US-Iran nuclear talks: Deal or military strike?</a></td>
+  <td class="src">DW English</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#52c41a;font-size:.78rem;font-weight:600">正面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:65%;background:#52c41a"></div></div>
+      <span class="dim" style="font-size:.72rem">+0.32</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-25 17:59</td>
+</tr>
+<tr class="nr" data-risk="HIGH">
+  <td class="dim">21</td>
+  <td><a href="https://www.theguardian.com/world/2026/feb/25/disputes-hamas-disarmament-threaten-gaza-peace-plan-progress" target="_blank" class="ntitle">Disputes over Hamas disarmament stall Gaza peace plan progress</a></td>
+  <td class="src">The Guardian</td>
+  <td><span class="badge high">高风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:14%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.71</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇱 以色列</span> <span class="ctag">🇵🇸 巴勒斯坦</span></td>
+  <td class="ts">02-25 15:06</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">22</td>
+  <td><a href="https://www.theguardian.com/society/2026/feb/26/mumsnet-campaign-demands-ban-social-media-under-16s" target="_blank" class="ntitle">Mumsnet campaign demands ban on social media for under-16s</a></td>
+  <td class="src">The Guardian</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:3%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.93</span>
+    </div>
+  </td>
+  <td class="ctags">—</td>
+  <td class="ts">02-26 06:00</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">23</td>
+  <td><a href="https://news.google.com/rss/articles/CBMirgFBVV95cUxQeU5NeGhyMTd1aV9fd2NGZ0tFVDhWUzVxZ0tVRHRmWGlOcTVTOEdXcGRzeS05TFZQN195Qi1OUEc3aFc5ZHhmenpaMElyTFUwTU5Id0JXSUZxMUdiZGYxWGpFMnhTSVJaSkFYdmoxS3psOERCZVpwSlJWaVRvQmZkMmIxM184T3p6SlFjU1FUYUVFYWdIN2NtVnFCYlBGSEY0YXQzaDVGeTN5QjhpcmfSAbMBQVVfeXFMTnFtWEtzY1lla1VhTXNJMGhnVDBnSkU0cnFLb2N0OEVkZFlyMUZnSkFub01RckVoRENvSUJyNEFaX3lOTFNtazlIV200QmFfRENyNFV4WnNoajI5X1JBTlVLcFhUYVNfUS1MNGFxb29TejFYeEVLWnFHSVJ5X1g2dXNXTkVudmF1OG9uU09NdHFsaE1lMFd3UDJGZkhEaUYydjlGd1BpOHpRWUhDM09wNmFrcVk?oc=5" target="_blank" class="ntitle">Iran, US set to hold talks as Trump threatens force, imposes sanctions - Al Jazeera</a></td>
+  <td class="src">GNews Geopolitics</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:14%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.72</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇮🇷 伊朗</span></td>
+  <td class="ts">02-26 05:49</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">24</td>
+  <td><a href="https://www.aljazeera.com/news/2026/2/26/us-to-allow-venezuelan-oil-sales-to-cuba-as-alarm-grows-in-the-caribbean?traffic_source=rss" target="_blank" class="ntitle">US to allow Venezuelan oil sales to Cuba as alarm grows in the Caribbean</a></td>
+  <td class="src">Al Jazeera</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:11%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.77</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span></td>
+  <td class="ts">02-26 04:17</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">25</td>
+  <td><a href="https://www.dw.com/en/us-trump-administration-pauses-minnesota-health-funds/a-76128417?maca=en-rss-en-world-4025-rdf" target="_blank" class="ntitle">US: Trump administration pauses Minnesota health funds</a></td>
+  <td class="src">DW English</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:8%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.83</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span></td>
+  <td class="ts">02-26 04:12</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">26</td>
+  <td><a href="https://www.theguardian.com/australia-news/2026/feb/26/blaring-sirens-on-smartphones-to-warn-australians-of-major-disasters-under-emergency-alerts-overhaul" target="_blank" class="ntitle">Blaring sirens on smartphones to warn Australians of major disasters under emergency alert</a></td>
+  <td class="src">The Guardian</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:2%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.94</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span></td>
+  <td class="ts">02-26 03:43</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">27</td>
+  <td><a href="https://news.google.com/rss/articles/CBMiswFBVV95cUxNc3YtZ19Ubk5WZXJHMUdLM0p6XzVzNHJSMHZCNEYxUl9Ca1lCLXdNSkRvQlo2bC11WVIyMU5STWJOd0xrd2d5T0o2dTRWVHNhUml2QWlfMHhGV21pcUFqUkhLQ2RhYUdvS0hWRlE0NWR0Rm16M3JuNlp1aUdpc2U2OEtMWFZwRG5ldXVpMHJ5dWpmSEJNWm1qaHNvdkFUZS1rRmd2REhMUFdobkw2bGtnU0laQQ?oc=5" target="_blank" class="ntitle">Hacker Used Anthropic’s Claude to Steal Mexican Data Trove - Bloomberg</a></td>
+  <td class="src">GNews World</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:1%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.97</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇬🇧 英国</span></td>
+  <td class="ts">02-26 02:27</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">28</td>
+  <td><a href="https://news.google.com/rss/articles/CBMiywFBVV95cUxNMzRuX1VDUTFlSFNlcEx0aHFha0pvUUVhQVVLMVk4aEdPeUdPc1BLU3dwZExzcjZON2dRYzI2b1lrVWNQem80eGFVd2dqQUxHcEdLQU5iMmY1T0k5Y1RISnlQMnFJbDdPU3Jhd3plOFVHbHV2djNfbV9KN3E3VlY1U1hTYTV5WlRBVVpCRl9YYVgyTG82QW9IT2dVM05KZVlTenNiTFV2WmxiczhjY0tpMGF1WnZlY25sYTVzb3hvRHhkMHpzdk9fT0RxMA?oc=5" target="_blank" class="ntitle">Ukraine war briefing: Kyiv to accelerate placement of anti-drone nets across frontline - T</a></td>
+  <td class="src">GNews World</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:11%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.77</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇷🇺 俄罗斯</span> <span class="ctag">🇺🇦 乌克兰</span> <span class="ctag">🇬🇧 英国</span></td>
+  <td class="ts">02-26 01:27</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">29</td>
+  <td><a href="https://www.nytimes.com/2026/02/25/world/americas/el-mencho-tapalpa-jalisco-cartel.html" target="_blank" class="ntitle">Inside Tapalpa, the Town in Mexico Where El Mencho Made His Last Stand</a></td>
+  <td class="src">NYTimes World</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:12%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.76</span>
+    </div>
+  </td>
+  <td class="ctags">—</td>
+  <td class="ts">02-26 00:58</td>
+</tr>
+<tr class="nr" data-risk="MEDIUM">
+  <td class="dim">30</td>
+  <td><a href="https://www.aljazeera.com/news/2026/2/26/russia-ukraine-war-list-of-key-events-day-1463?traffic_source=rss" target="_blank" class="ntitle">Russia-Ukraine war: List of key events, day 1,463</a></td>
+  <td class="src">Al Jazeera</td>
+  <td><span class="badge medium">中风险</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:#ff4d4d;font-size:.78rem;font-weight:600">极负面</span>
+      <div class="senti-track"><div class="senti-fill" style="width:8%;background:#ff4d4d"></div></div>
+      <span class="dim" style="font-size:.72rem">-0.83</span>
+    </div>
+  </td>
+  <td class="ctags"><span class="ctag">🇺🇸 美国</span> <span class="ctag">🇷🇺 俄罗斯</span> <span class="ctag">🇺🇦 乌克兰</span> <span class="ctag">🇬🇧 英国</span></td>
+  <td class="ts">02-26 00:43</td>
+</tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="noResults" style="display:none;text-align:center;padding:24px;color:var(--muted)">无匹配结果</div>
+  </div>
+
+</div>
+
+<footer>
+  NewsAgent · 生成于 2026-02-26 14:38:09 · 数据来源 RSS 公开新闻源 · 仅供参考，不构成投资或政策建议
+</footer>
+
+<script>
+// ── Chart.js global defaults ──────────────────────────────────────────────
+Chart.defaults.color = '#6a849e';
+Chart.defaults.font.family = "-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif";
+Chart.defaults.font.size = 12;
+
+// ── Risk Donut ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('riskChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['高风险', '中风险', '低风险'],
+    datasets: [{ data: [21,55,99], backgroundColor: ['#f85149','#e3a04f','#3fb950'], borderWidth: 0, hoverOffset: 8 }]
+  },
+  options: {
+    cutout: '72%', plugins: { legend: { position: 'bottom', labels: { padding: 16 } }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.raw} (${(c.raw/175*100).toFixed(1)}%)` } } },
+    animation: { animateRotate: true, duration: 900 }
+  }
+});
+
+// ── Country Horizontal Bar ────────────────────────────────────────────────
+new Chart(document.getElementById('countryChart'), {
+  type: 'bar',
+  data: {
+    labels: ["\u7f8e\u56fd \ud83c\uddfa\ud83c\uddf8", "\u82f1\u56fd \ud83c\uddec\ud83c\udde7", "\u4e4c\u514b\u5170 \ud83c\uddfa\ud83c\udde6", "\u4f0a\u6717 \ud83c\uddee\ud83c\uddf7", "\u4ee5\u8272\u5217 \ud83c\uddee\ud83c\uddf1", "\u6cd5\u56fd \ud83c\uddeb\ud83c\uddf7", "\u4fc4\u7f57\u65af \ud83c\uddf7\ud83c\uddfa", "\u5df4\u52d2\u65af\u5766 \ud83c\uddf5\ud83c\uddf8", "\u4e2d\u56fd \ud83c\udde8\ud83c\uddf3", "\u5fb7\u56fd \ud83c\udde9\ud83c\uddea"],
+    datasets: [{ label: '提及次数', data: [119, 52, 17, 16, 14, 11, 10, 9, 8, 8],
+      backgroundColor: 'rgba(88,166,255,0.7)', borderColor: '#58a6ff', borderWidth: 1, borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#1e2d3d' }, ticks: { color: '#6a849e' } },
+      y: { grid: { display: false }, ticks: { color: '#d4e1f0' } }
+    },
+    animation: { duration: 900 }
+  }
+});
+
+// ── Source Donut ─────────────────────────────────────────────────────────
+new Chart(document.getElementById('sourceChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ["GNews World", "The Guardian", "NYTimes World", "Al Jazeera", "France24", "BBC World"],
+    datasets: [{ data: [35, 32, 24, 23, 22, 19],
+      backgroundColor: ['#58a6ff','#3fb950','#e3a04f','#f85149','#bc8cff','#39d5c9'],
+      borderWidth: 0, hoverOffset: 6
+    }]
+  },
+  options: {
+    cutout: '65%', plugins: { legend: { position: 'bottom', labels: { padding: 14 } } },
+    animation: { duration: 900 }
+  }
+});
+
+// ── Topic Radar ───────────────────────────────────────────────────────────
+new Chart(document.getElementById('topicChart'), {
+  type: 'radar',
+  data: {
+    labels: ["\u5916\u4ea4", "\u519b\u4e8b\u51b2\u7a81", "\u56fd\u5185\u653f\u6cbb", "\u793e\u4f1a\u52a8\u8361", "\u5236\u88c1\u4e0e\u8d38\u6613"],
+    datasets: [{ label: '条目数', data: [127, 54, 43, 21, 13],
+      backgroundColor: 'rgba(188,140,255,0.2)', borderColor: '#bc8cff',
+      borderWidth: 2, pointBackgroundColor: '#bc8cff', pointRadius: 3
+    }]
+  },
+  options: {
+    scales: { r: { grid: { color: '#1e2d3d' }, angleLines: { color: '#1e2d3d' }, ticks: { display: false } } },
+    plugins: { legend: { display: false } },
+    animation: { duration: 900 }
+  }
+});
+
+// ── Source Bar ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('sourceBarChart'), {
+  type: 'bar',
+  data: {
+    labels: ["GNews World", "The Guardian", "NYTimes World", "Al Jazeera", "France24", "BBC World"],
+    datasets: [{ label: '条目数', data: [35, 32, 24, 23, 22, 19],
+      backgroundColor: ['rgba(57,213,201,.7)','rgba(57,213,201,.55)','rgba(57,213,201,.45)','rgba(57,213,201,.38)','rgba(57,213,201,.3)','rgba(57,213,201,.22)'],
+      borderRadius: 4, borderWidth: 0
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#6a849e', maxRotation: 30 } },
+      y: { grid: { color: '#1e2d3d' }, ticks: { color: '#6a849e' } }
+    },
+    animation: { duration: 900 }
+  }
+});
+
+// ── News filter & search ──────────────────────────────────────────────────
+function filterNews(level, btn) {
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const rows = document.querySelectorAll('#newsTbody .nr');
+  let shown = 0;
+  rows.forEach(r => {
+    const show = level === 'ALL' || r.dataset.risk === level;
+    r.style.display = show ? '' : 'none';
+    if (show) shown++;
+  });
+  document.getElementById('noResults').style.display = shown ? 'none' : '';
+}
+
+function searchNews(q) {
+  const lq = q.toLowerCase();
+  const rows = document.querySelectorAll('#newsTbody .nr');
+  let shown = 0;
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    const show = text.includes(lq);
+    r.style.display = show ? '' : 'none';
+    if (show) shown++;
+  });
+  document.getElementById('noResults').style.display = shown ? 'none' : '';
+}
+
+// ── Animate sentiment needle ──────────────────────────────────────────────
+window.addEventListener('load', () => {
+  const needle = document.getElementById('sentiNeedle');
+  if (needle) { needle.style.left = '34%'; }
+});
+</script>
+</body>
+</html>
