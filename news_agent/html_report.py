@@ -1,4 +1,4 @@
-"""Generate a self-contained HTML report with visual charts and risk indicators."""
+"""Generate a rich self-contained HTML report with Chart.js interactive visualizations."""
 from __future__ import annotations
 
 import html
@@ -25,7 +25,8 @@ _COUNTRY_FLAG: dict[str, str] = {
     "United States": "🇺🇸", "China": "🇨🇳", "Russia": "🇷🇺", "Ukraine": "🇺🇦",
     "Israel": "🇮🇱", "Palestine": "🇵🇸", "Iran": "🇮🇷", "United Kingdom": "🇬🇧",
     "France": "🇫🇷", "Germany": "🇩🇪", "Japan": "🇯🇵", "South Korea": "🇰🇷",
-    "India": "🇮🇳", "Taiwan": "🇹🇼",
+    "India": "🇮🇳", "Taiwan": "🇹🇼", "Saudi Arabia": "🇸🇦", "Cuba": "🇨🇺",
+    "Turkey": "🇹🇷", "North Korea": "🇰🇵", "Syria": "🇸🇾", "Iraq": "🇮🇶",
 }
 
 
@@ -37,13 +38,6 @@ _RISK_BADGE = {
     "HIGH": ('<span class="badge high">高风险</span>', "#ff4d4d"),
     "MEDIUM": ('<span class="badge medium">中风险</span>', "#ffa64d"),
     "LOW": ('<span class="badge low">低风险</span>', "#52c41a"),
-}
-
-_SENTIMENT_SIGN = {
-    (True, True): ("极负面", "#ff4d4d"),
-    (True, False): ("负面", "#fa8c16"),
-    (False, False): ("中性", "#8c8c8c"),
-    (False, True): ("正面", "#52c41a"),
 }
 
 
@@ -59,150 +53,7 @@ def _senti_info(score: float) -> tuple[str, str]:
     return "极正面", "#1890ff"
 
 
-_CSS = """
-:root {
-  --bg: #0d1117; --surface: #161b22; --border: #30363d;
-  --text: #e6edf3; --muted: #8b949e;
-  --red: #ff4d4d; --orange: #ffa64d; --green: #3fb950; --blue: #58a6ff;
-  --high: #ff4d4d; --medium: #ffa64d; --low: #3fb950;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; }
-a { color: var(--blue); text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-header h1 { font-size: 1.4rem; font-weight: 600; }
-header .meta { color: var(--muted); font-size: 0.85rem; }
-
-.container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
-
-/* Stats row */
-.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; }
-.stat-card .value { font-size: 2rem; font-weight: 700; }
-.stat-card .label { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
-.stat-card.high .value { color: var(--high); }
-.stat-card.medium .value { color: var(--medium); }
-.stat-card.low .value { color: var(--low); }
-
-/* Charts row */
-.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-@media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
-
-.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
-.chart-card h2 { font-size: 0.9rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px; }
-
-.bar-row { display: flex; align-items: center; margin-bottom: 9px; }
-.bar-label { width: 160px; flex-shrink: 0; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bar-track { flex: 1; background: var(--border); border-radius: 4px; height: 14px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
-.bar-count { width: 42px; text-align: right; flex-shrink: 0; font-size: 0.8rem; color: var(--muted); }
-
-/* Risk donut (pure CSS) */
-.donut-wrap { display: flex; align-items: center; gap: 28px; }
-.donut-legend { display: flex; flex-direction: column; gap: 8px; }
-.donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-.dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-.dot.high { background: var(--high); }
-.dot.medium { background: var(--medium); }
-.dot.low { background: var(--low); }
-.donut-value { font-weight: 600; }
-.donut-pct { color: var(--muted); font-size: 0.78rem; }
-
-/* News table */
-.section-title { font-size: 1rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-.news-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-.news-table th { background: #1c2128; color: var(--muted); text-align: left; padding: 10px 12px; font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
-.news-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.news-table tr:hover td { background: #1c2128; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; letter-spacing: .04em; }
-.badge.high { background: rgba(255,77,77,.18); color: var(--high); border: 1px solid var(--high); }
-.badge.medium { background: rgba(255,166,77,.18); color: var(--medium); border: 1px solid var(--medium); }
-.badge.low { background: rgba(63,185,80,.18); color: var(--low); border: 1px solid var(--low); }
-.senti-bar { height: 4px; border-radius: 2px; margin-top: 4px; }
-.country-tag { display: inline-block; background: rgba(88,166,255,.12); color: var(--blue); border-radius: 3px; padding: 1px 5px; font-size: 0.75rem; margin: 1px 2px; }
-.source-tag { color: var(--muted); font-size: 0.78rem; }
-.ts { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
-.news-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; }
-footer { text-align: center; color: var(--muted); font-size: 0.78rem; padding: 32px; border-top: 1px solid var(--border); margin-top: 16px; }
-"""
-
-
-def _bar_chart(items: list[tuple[str, int]], color: str) -> str:
-    if not items:
-        return "<p style='color:var(--muted)'>无数据</p>"
-    max_val = items[0][1]
-    rows = []
-    for label, count in items:
-        pct = (count / max_val * 100) if max_val else 0
-        display = _t_country(_t_topic(label))
-        rows.append(
-            f"""<div class="bar-row">
-  <div class="bar-label" title="{html.escape(display)}">{html.escape(display)}</div>
-  <div class="bar-track"><div class="bar-fill" style="width:{pct:.1f}%;background:{color}"></div></div>
-  <div class="bar-count">{count}</div>
-</div>"""
-        )
-    return "\n".join(rows)
-
-
-def _source_donut_html(sources: list[tuple[str, int]]) -> str:
-    total = sum(c for _, c in sources) or 1
-    source_colors = ["#58a6ff", "#3fb950", "#ffa64d", "#ff4d4d", "#d2a8ff"]
-    items_html = []
-    for i, (source, count) in enumerate(sources[:5]):
-        color = source_colors[i % len(source_colors)]
-        pct = count / total * 100
-        items_html.append(
-            f"""<div class="donut-legend-item">
-  <div class="dot" style="background:{color}"></div>
-  <span>{html.escape(source[:24])}</span>
-  <span class="donut-value">{count}</span>
-  <span class="donut-pct">({pct:.0f}%)</span>
-</div>"""
-        )
-    return "\n".join(items_html)
-
-
-def _conflict_rows_html(conflict_pairs: list[dict]) -> str:
-    if not conflict_pairs:
-        return '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">当前窗口未检测到国家间冲突信号</td></tr>'
-    rows = []
-    for i, entry in enumerate(conflict_pairs[:12], 1):
-        a, b = entry["pair"]
-        avg_risk = entry["avg_risk"]
-        if avg_risk >= 6:
-            risk_color, risk_icon = "var(--high)", "★"
-        elif avg_risk >= 3:
-            risk_color, risk_icon = "var(--medium)", "▲"
-        else:
-            risk_color, risk_icon = "var(--low)", "·"
-
-        senti = entry["avg_sentiment"]
-        _, s_color = _senti_info(senti)
-        topics_str = html.escape(" · ".join(_t_topic(t) for t in entry["topics"][:2]) or "—")
-        headline = html.escape(entry["headlines"][0][:60]) if entry["headlines"] else "—"
-        a_zh, b_zh = _t_country(a), _t_country(b)
-
-        rows.append(f"""
-<tr>
-  <td style="text-align:center;color:var(--muted)">{i}</td>
-  <td style="white-space:nowrap">
-    <span style="font-size:1.1em">{_flag(a)}</span> <strong>{html.escape(a_zh)}</strong>
-    <span style="color:var(--muted);padding:0 6px">↔</span>
-    <span style="font-size:1.1em">{_flag(b)}</span> <strong>{html.escape(b_zh)}</strong>
-  </td>
-  <td style="text-align:center;font-weight:700">{entry['count']}</td>
-  <td style="text-align:center;color:{risk_color};font-weight:700">{risk_icon}{avg_risk:.0f}</td>
-  <td style="text-align:center;color:{s_color};font-weight:600">{senti:+.2f}</td>
-  <td style="color:var(--muted);font-size:.82rem">{topics_str}</td>
-  <td style="font-size:.82rem">{headline}</td>
-</tr>""")
-    return "\n".join(rows)
-
-
-def _news_rows_html(analyzed_items: list[AnalyzedItem], n: int = 20) -> str:
+def _news_rows_html(analyzed_items: list[AnalyzedItem], n: int = 30) -> str:
     top = [e for e in analyzed_items if e.risk_level in {"HIGH", "MEDIUM"}][:n]
     if not top:
         top = analyzed_items[:n]
@@ -210,29 +61,70 @@ def _news_rows_html(analyzed_items: list[AnalyzedItem], n: int = 20) -> str:
     for idx, entry in enumerate(top, start=1):
         badge_html, _ = _RISK_BADGE[entry.risk_level]
         senti_label, senti_color = _senti_info(entry.sentiment)
-        # sentiment bar: map -1..1 → 0..100%
-        bar_pct = (entry.sentiment + 1) / 2 * 100
+        bar_pct = int((entry.sentiment + 1) / 2 * 100)
         countries_html = " ".join(
-            f'<span class="country-tag">{html.escape(_t_country(c))}</span>' for c in entry.countries[:4]
+            f'<span class="ctag">{html.escape(_flag(c))} {html.escape(_t_country(c))}</span>'
+            for c in entry.countries[:4]
         ) or "—"
         ts = entry.item.published_at.strftime("%m-%d %H:%M")
-        title_esc = html.escape(entry.item.title)
+        title_esc = html.escape(entry.item.title[:90])
         link = html.escape(entry.item.link)
+        risk_cls = entry.risk_level.lower()
         rows.append(
-            f"""<tr>
-  <td style="color:var(--muted)">{idx}</td>
-  <td><a href="{link}" target="_blank">{title_esc}</a></td>
-  <td class="source-tag">{html.escape(entry.item.source)}</td>
-  <td style="text-align:center">{badge_html}</td>
-  <td style="text-align:center">
-    <span style="color:{senti_color};font-weight:600">{senti_label}</span>
-    <div class="senti-bar" style="background:linear-gradient(to right, #ff4d4d, #ffa64d, #3fb950);opacity:.5;width:100%"></div>
-    <div style="font-size:.75rem;color:{senti_color}">{entry.sentiment:+.2f}</div>
+            f"""<tr class="nr" data-risk="{entry.risk_level}">
+  <td class="dim">{idx}</td>
+  <td><a href="{link}" target="_blank" class="ntitle">{title_esc}</a></td>
+  <td class="src">{html.escape(entry.item.source)}</td>
+  <td><span class="badge {risk_cls}">{_t_risk(entry.risk_level)}</span></td>
+  <td>
+    <div class="senti-wrap">
+      <span style="color:{senti_color};font-size:.78rem;font-weight:600">{senti_label}</span>
+      <div class="senti-track"><div class="senti-fill" style="width:{bar_pct}%;background:{senti_color}"></div></div>
+      <span class="dim" style="font-size:.72rem">{entry.sentiment:+.2f}</span>
+    </div>
   </td>
-  <td>{countries_html}</td>
+  <td class="ctags">{countries_html}</td>
   <td class="ts">{ts}</td>
 </tr>"""
         )
+    return "\n".join(rows)
+
+
+def _conflict_rows_html(conflict_pairs: list[dict]) -> str:
+    if not conflict_pairs:
+        return '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">当前窗口未检测到国家间冲突信号</td></tr>'
+    rows = []
+    for i, entry in enumerate(conflict_pairs[:12], 1):
+        a, b = entry["pair"]
+        avg_risk = entry["avg_risk"]
+        if avg_risk >= 6:
+            risk_color, risk_icon = "var(--red)", "🔴"
+        elif avg_risk >= 3:
+            risk_color, risk_icon = "var(--orange)", "🟠"
+        else:
+            risk_color, risk_icon = "var(--green)", "🟢"
+        senti = entry["avg_sentiment"]
+        _, s_color = _senti_info(senti)
+        topics_str = html.escape(" · ".join(_t_topic(t) for t in entry["topics"][:2]) or "—")
+        headline = html.escape(entry["headlines"][0][:55]) if entry["headlines"] else "—"
+        a_zh, b_zh = _t_country(a), _t_country(b)
+        heat = min(int(entry["count"] / 15 * 100), 100)
+        rows.append(f"""
+<tr>
+  <td class="dim" style="text-align:center">{i}</td>
+  <td style="white-space:nowrap">
+    <span class="flag-pair">{_flag(a)}<strong>{html.escape(a_zh)}</strong>
+    <span class="vs">↔</span>
+    {_flag(b)}<strong>{html.escape(b_zh)}</strong></span>
+  </td>
+  <td style="text-align:center">
+    <div class="heat-bar"><div class="heat-fill" style="width:{heat}%;background:{risk_color}"></div></div>
+    <span style="font-weight:700">{entry['count']}</span>
+  </td>
+  <td style="text-align:center;color:{risk_color};font-weight:700">{risk_icon} {avg_risk:.1f}</td>
+  <td style="text-align:center;color:{s_color};font-weight:600">{senti:+.2f}</td>
+  <td class="dim" style="font-size:.8rem">{topics_str}</td>
+</tr>""")
     return "\n".join(rows)
 
 
@@ -243,118 +135,514 @@ def generate_html(summary: dict, analyzed_items: list[AnalyzedItem], hours: int)
     high = summary["risk_levels"].get("HIGH", 0)
     medium = summary["risk_levels"].get("MEDIUM", 0)
     low = summary["risk_levels"].get("LOW", 0)
+    t = total or 1
 
-    country_chart = _bar_chart(summary["countries"][:10], "#58a6ff")
-    topic_chart = _bar_chart(summary["topics"][:8], "#d2a8ff")
-    source_legend = _source_donut_html(summary["sources"])
+    neg_count = len([e for e in analyzed_items if e.sentiment < -0.2])
+    country_count = len(summary["countries"])
+
+    # Chart.js data
+    country_labels = json.dumps([_t_country(c) + " " + _flag(c) for c, _ in summary["countries"][:10]])
+    country_values = json.dumps([v for _, v in summary["countries"][:10]])
+
+    topic_labels = json.dumps([_t_topic(t) for t, _ in summary["topics"][:7]])
+    topic_values = json.dumps([v for _, v in summary["topics"][:7]])
+
+    source_labels = json.dumps([s for s, _ in summary["sources"][:6]])
+    source_values = json.dumps([v for _, v in summary["sources"][:6]])
+
     conflict_rows = _conflict_rows_html(summary.get("conflict_pairs", []))
     news_rows = _news_rows_html(analyzed_items)
 
-    # compute risk donut segment percentages (conic-gradient)
-    t = (total or 1)
-    high_pct = high / t * 360
-    med_pct = medium / t * 360
-    low_pct = low / t * 360
-    conic = (
-        f"conic-gradient(var(--high) 0deg {high_pct:.1f}deg,"
-        f"var(--medium) {high_pct:.1f}deg {high_pct+med_pct:.1f}deg,"
-        f"var(--low) {high_pct+med_pct:.1f}deg 360deg)"
-    )
+    # avg sentiment
+    sentiments = [e.sentiment for e in analyzed_items]
+    avg_senti = sum(sentiments) / len(sentiments) if sentiments else 0
+    avg_label, avg_color = _senti_info(avg_senti)
+    senti_pct = int((avg_senti + 1) / 2 * 100)
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>国际政治舆情简报 {generated_at}</title>
-<style>{_CSS}</style>
+<title>🌐 政治舆情简报 · {generated_at[:10]}</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+:root {{
+  --bg: #080c12;
+  --surface: #0f1620;
+  --surface2: #151e2b;
+  --border: #1e2d3d;
+  --text: #d4e1f0;
+  --muted: #6a849e;
+  --red: #f85149;
+  --orange: #e3a04f;
+  --green: #3fb950;
+  --blue: #58a6ff;
+  --purple: #bc8cff;
+  --teal: #39d5c9;
+  --glow-red: rgba(248,81,73,.25);
+  --glow-blue: rgba(88,166,255,.15);
+}}
+*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+html {{ scroll-behavior: smooth; }}
+body {{ background: var(--bg); color: var(--text); font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.6; }}
+a {{ color: var(--blue); text-decoration: none; }}
+a:hover {{ text-decoration: underline; }}
+
+/* ── NAV ── */
+nav {{
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,12,18,.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between; height: 56px;
+}}
+.nav-brand {{ display: flex; align-items: center; gap: 10px; }}
+.nav-brand .logo {{ font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em; }}
+.nav-brand .badge-pill {{ background: var(--glow-red); color: var(--red); border: 1px solid var(--red); padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 600; }}
+.nav-meta {{ color: var(--muted); font-size: .8rem; }}
+.nav-links {{ display: flex; gap: 20px; }}
+.nav-links a {{ color: var(--muted); font-size: .82rem; transition: color .2s; }}
+.nav-links a:hover {{ color: var(--text); text-decoration: none; }}
+
+/* ── LAYOUT ── */
+.page {{ max-width: 1440px; margin: 0 auto; padding: 28px 32px; }}
+
+/* ── STAT CARDS ── */
+.stats-grid {{
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}}
+@media (max-width: 1100px) {{ .stats-grid {{ grid-template-columns: repeat(3, 1fr); }} }}
+@media (max-width: 640px)  {{ .stats-grid {{ grid-template-columns: repeat(2, 1fr); }} }}
+.stat-card {{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, transform .2s;
+}}
+.stat-card:hover {{ border-color: #2e4a66; transform: translateY(-2px); }}
+.stat-card::before {{
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}}
+.stat-card.total::before {{ background: linear-gradient(90deg,var(--blue),var(--purple)); }}
+.stat-card.high::before  {{ background: var(--red); }}
+.stat-card.medium::before{{ background: var(--orange); }}
+.stat-card.low::before   {{ background: var(--green); }}
+.stat-card.country::before{{ background: var(--teal); }}
+.stat-card.neg::before   {{ background: var(--purple); }}
+.stat-card .icon {{ font-size: 1.6rem; margin-bottom: 8px; display: block; }}
+.stat-card .num {{ font-size: 2.2rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; }}
+.stat-card .lbl {{ color: var(--muted); font-size: .78rem; margin-top: 6px; }}
+.stat-card.total  .num {{ color: var(--blue); }}
+.stat-card.high   .num {{ color: var(--red); }}
+.stat-card.medium .num {{ color: var(--orange); }}
+.stat-card.low    .num {{ color: var(--green); }}
+.stat-card.country.num {{ color: var(--teal); }}
+.stat-card.neg    .num {{ color: var(--purple); }}
+
+/* ── SENTIMENT METER ── */
+.senti-meter-card {{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+}}
+.senti-meter-title {{ font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }}
+.senti-track-big {{ flex: 1; min-width: 200px; height: 10px; background: linear-gradient(to right, #f85149, #e3a04f 40%, #3fb950); border-radius: 5px; position: relative; }}
+.senti-needle {{ position: absolute; top: -5px; width: 4px; height: 20px; background: white; border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 8px rgba(255,255,255,.6); transition: left .8s cubic-bezier(.34,1.56,.64,1); }}
+
+/* ── CHART GRID ── */
+.charts-grid {{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}}
+@media (max-width: 1100px) {{ .charts-grid {{ grid-template-columns: 1fr 1fr; }} }}
+@media (max-width: 700px)  {{ .charts-grid {{ grid-template-columns: 1fr; }} }}
+.chart-card {{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: border-color .2s;
+}}
+.chart-card:hover {{ border-color: #2e4a66; }}
+.chart-card.wide {{ grid-column: span 2; }}
+@media (max-width: 1100px) {{ .chart-card.wide {{ grid-column: span 1; }} }}
+.card-title {{
+  font-size: .72rem; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .1em;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 6px;
+}}
+.card-title .dot {{ width: 6px; height: 6px; border-radius: 50%; }}
+
+/* ── CONFLICT TABLE ── */
+.section-card {{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}}
+.section-hd {{
+  font-size: 1rem; font-weight: 700;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}}
+.section-hd .sub {{ font-size: .75rem; color: var(--muted); font-weight: 400; }}
+table.dtable {{ width: 100%; border-collapse: collapse; font-size: .83rem; }}
+table.dtable th {{
+  background: var(--surface2); color: var(--muted);
+  text-align: left; padding: 9px 12px;
+  font-weight: 500; white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}}
+table.dtable td {{ padding: 9px 12px; border-bottom: 1px solid #131c26; vertical-align: middle; }}
+table.dtable tr:hover td {{ background: var(--surface2); }}
+.heat-bar {{ width: 100%; height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 3px; }}
+.heat-fill {{ height: 4px; border-radius: 2px; }}
+.flag-pair {{ display: flex; align-items: center; gap: 4px; }}
+.vs {{ color: var(--muted); padding: 0 4px; }}
+
+/* ── NEWS TABLE ── */
+.filter-bar {{ display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }}
+.fbtn {{
+  padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--muted); font-size: .78rem;
+  cursor: pointer; transition: all .15s;
+}}
+.fbtn:hover, .fbtn.active {{ color: var(--text); border-color: var(--blue); background: var(--glow-blue); }}
+.fbtn.active.h {{ border-color: var(--red);  background: rgba(248,81,73,.1);  color: var(--red); }}
+.fbtn.active.m {{ border-color: var(--orange); background: rgba(227,160,79,.1); color: var(--orange); }}
+.fbtn.active.l {{ border-color: var(--green); background: rgba(63,185,80,.1);  color: var(--green); }}
+.search-box {{
+  margin-left: auto;
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text); font-size: .8rem; outline: none; width: 200px;
+  transition: border-color .2s;
+}}
+.search-box:focus {{ border-color: var(--blue); }}
+.badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .72rem; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }}
+.badge.high   {{ background: rgba(248,81,73,.15);  color: var(--red);    border: 1px solid rgba(248,81,73,.4); }}
+.badge.medium {{ background: rgba(227,160,79,.15); color: var(--orange); border: 1px solid rgba(227,160,79,.4); }}
+.badge.low    {{ background: rgba(63,185,80,.15);  color: var(--green);  border: 1px solid rgba(63,185,80,.4); }}
+.ntitle {{ font-size: .84rem; }}
+.src {{ color: var(--muted); font-size: .76rem; white-space: nowrap; }}
+.ts  {{ color: var(--muted); font-size: .76rem; white-space: nowrap; }}
+.dim {{ color: var(--muted); }}
+.ctags {{ white-space: nowrap; }}
+.ctag {{
+  display: inline-block; background: rgba(88,166,255,.1); color: var(--blue);
+  border-radius: 3px; padding: 1px 5px; font-size: .72rem; margin: 1px 2px;
+}}
+.senti-wrap {{ display: flex; flex-direction: column; gap: 2px; min-width: 80px; }}
+.senti-track {{ height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }}
+.senti-fill  {{ height: 3px; border-radius: 2px; transition: width .4s; }}
+
+/* ── FOOTER ── */
+footer {{ text-align: center; color: var(--muted); font-size: .76rem; padding: 32px; border-top: 1px solid var(--border); margin-top: 8px; }}
+footer a {{ color: var(--muted); }}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+::-webkit-scrollbar-track {{ background: var(--bg); }}
+::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 3px; }}
+
+/* ── ANIMATED COUNTER ── */
+@keyframes countUp {{ from {{ opacity: 0; transform: translateY(8px); }} to {{ opacity: 1; transform: none; }} }}
+.num {{ animation: countUp .5s ease both; }}
+</style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>🌐 国际政治舆情监控</h1>
-    <div class="meta">监控窗口：最近 {hours} 小时 &nbsp;·&nbsp; 生成时间：{generated_at}</div>
+
+<nav>
+  <div class="nav-brand">
+    <span class="logo">🌐 NewsAgent</span>
+    <span class="badge-pill">LIVE</span>
   </div>
-  <div class="meta">NewsAgent MVP · 仅供参考</div>
-</header>
-
-<div class="container">
-
-  <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-card"><div class="value">{total}</div><div class="label">📰 抓取总条目</div></div>
-    <div class="stat-card high"><div class="value">{high}</div><div class="label">🔴 高风险</div></div>
-    <div class="stat-card medium"><div class="value">{medium}</div><div class="label">🟠 中风险</div></div>
-    <div class="stat-card low"><div class="value">{low}</div><div class="label">🟢 低风险</div></div>
-    <div class="stat-card"><div class="value">{len(summary['countries'])}</div><div class="label">🌍 涉及国家</div></div>
-    <div class="stat-card"><div class="value">{len(analyzed_items and [e for e in analyzed_items if e.sentiment < -0.2])}</div><div class="label">😟 负面情绪条目</div></div>
+  <div class="nav-links">
+    <a href="#overview">总览</a>
+    <a href="#charts">图表</a>
+    <a href="#conflict">冲突矩阵</a>
+    <a href="#news">新闻快讯</a>
   </div>
+  <div class="nav-meta">监控窗口 {hours}h · 生成于 {generated_at}</div>
+</nav>
 
-  <!-- Charts row -->
-  <div class="charts-row">
-    <div class="chart-card">
-      <h2>🌍 高频国家 / 地区</h2>
-      {country_chart}
+<div class="page">
+
+  <!-- STAT CARDS -->
+  <div id="overview" class="stats-grid">
+    <div class="stat-card total">
+      <span class="icon">📰</span>
+      <div class="num">{total}</div>
+      <div class="lbl">抓取条目总数</div>
     </div>
-    <div class="chart-card">
-      <h2>🏷 议题主题分布</h2>
-      {topic_chart}
+    <div class="stat-card high">
+      <span class="icon">🔴</span>
+      <div class="num">{high}</div>
+      <div class="lbl">高风险 ({high/t*100:.0f}%)</div>
+    </div>
+    <div class="stat-card medium">
+      <span class="icon">🟠</span>
+      <div class="num">{medium}</div>
+      <div class="lbl">中风险 ({medium/t*100:.0f}%)</div>
+    </div>
+    <div class="stat-card low">
+      <span class="icon">🟢</span>
+      <div class="num">{low}</div>
+      <div class="lbl">低风险 ({low/t*100:.0f}%)</div>
+    </div>
+    <div class="stat-card country">
+      <span class="icon">🌍</span>
+      <div class="num" style="color:var(--teal)">{country_count}</div>
+      <div class="lbl">涉及国家/地区</div>
+    </div>
+    <div class="stat-card neg">
+      <span class="icon">😟</span>
+      <div class="num" style="color:var(--purple)">{neg_count}</div>
+      <div class="lbl">负面情绪条目</div>
     </div>
   </div>
 
-  <div class="charts-row">
-    <div class="chart-card">
-      <h2>⚠ 风险等级分布</h2>
-      <div class="donut-wrap">
-        <div style="width:90px;height:90px;border-radius:50%;background:{conic};flex-shrink:0"></div>
-        <div class="donut-legend">
-          <div class="donut-legend-item"><div class="dot high"></div>高风险<span class="donut-value">{high}</span><span class="donut-pct">({high/t*100:.0f}%)</span></div>
-          <div class="donut-legend-item"><div class="dot medium"></div>中风险<span class="donut-value">{medium}</span><span class="donut-pct">({medium/t*100:.0f}%)</span></div>
-          <div class="donut-legend-item"><div class="dot low"></div>低风险<span class="donut-value">{low}</span><span class="donut-pct">({low/t*100:.0f}%)</span></div>
-        </div>
+  <!-- SENTIMENT METER -->
+  <div class="senti-meter-card">
+    <div>
+      <div class="senti-meter-title">整体情绪指数</div>
+      <div style="font-size:1.5rem;font-weight:700;color:{avg_color}">{avg_label} &nbsp;<span style="font-size:.9rem">{avg_senti:+.3f}</span></div>
+    </div>
+    <div style="flex:1;min-width:220px">
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:4px"><span>极负面 −1</span><span>中性</span><span>极正面 +1</span></div>
+      <div class="senti-track-big">
+        <div class="senti-needle" id="sentiNeedle" style="left:{senti_pct}%"></div>
       </div>
     </div>
-    <div class="chart-card">
-      <h2>📰 来源分布</h2>
-      {source_legend}
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="text-align:center"><div style="font-size:1.2rem;font-weight:700;color:var(--red)">{high}</div><div style="font-size:.72rem;color:var(--muted)">高风险</div></div>
+      <div style="text-align:center"><div style="font-size:1.2rem;font-weight:700;color:var(--orange)">{medium}</div><div style="font-size:.72rem;color:var(--muted)">中风险</div></div>
+      <div style="text-align:center"><div style="font-size:1.2rem;font-weight:700;color:var(--green)">{low}</div><div style="font-size:.72rem;color:var(--muted)">低风险</div></div>
     </div>
   </div>
 
-  <!-- Conflict matrix -->
-  <div class="news-card" style="margin-bottom:24px">
-    <div class="section-title">⚡ 国家冲突矩阵 <span style="font-size:.8rem;color:var(--muted);font-weight:400">（高/中风险文章中国家共现频率排序）</span></div>
+  <!-- CHARTS -->
+  <div id="charts" class="charts-grid">
+
+    <!-- Risk Donut -->
+    <div class="chart-card">
+      <div class="card-title"><div class="dot" style="background:var(--red)"></div>风险等级分布</div>
+      <canvas id="riskChart" height="220"></canvas>
+    </div>
+
+    <!-- Country Bar -->
+    <div class="chart-card wide">
+      <div class="card-title"><div class="dot" style="background:var(--blue)"></div>高频国家 / 地区 Top 10</div>
+      <canvas id="countryChart" height="220"></canvas>
+    </div>
+
+    <!-- Source Donut -->
+    <div class="chart-card">
+      <div class="card-title"><div class="dot" style="background:var(--teal)"></div>新闻来源分布</div>
+      <canvas id="sourceChart" height="220"></canvas>
+    </div>
+
+    <!-- Topic Radar -->
+    <div class="chart-card">
+      <div class="card-title"><div class="dot" style="background:var(--purple)"></div>议题主题分布</div>
+      <canvas id="topicChart" height="220"></canvas>
+    </div>
+
+    <!-- Source Bar -->
+    <div class="chart-card">
+      <div class="card-title"><div class="dot" style="background:var(--orange)"></div>来源条目数量</div>
+      <canvas id="sourceBarChart" height="220"></canvas>
+    </div>
+
+  </div>
+
+  <!-- CONFLICT MATRIX -->
+  <div id="conflict" class="section-card">
+    <div class="section-hd">⚡ 国家冲突矩阵 <span class="sub">高/中风险文章中国家共现频率排序</span></div>
     <div style="overflow-x:auto">
-      <table class="news-table">
+      <table class="dtable">
         <thead>
           <tr>
-            <th>#</th><th>冲突方</th><th>共现</th><th>风险</th><th>情绪</th><th>矛盾焦点</th><th>代表性标题</th>
+            <th>#</th><th>冲突方</th><th>共现次数</th><th>均风险</th><th>均情绪</th><th>矛盾焦点</th>
           </tr>
         </thead>
-        <tbody>
-          {conflict_rows}
-        </tbody>
+        <tbody>{conflict_rows}</tbody>
       </table>
     </div>
   </div>
 
-  <!-- News highlights -->
-  <div class="news-card">
-    <div class="section-title">🔥 高风险新闻快讯 Top 20</div>
+  <!-- NEWS TABLE -->
+  <div id="news" class="section-card">
+    <div class="section-hd">🔥 高/中风险新闻 Top 30</div>
+    <div class="filter-bar">
+      <button class="fbtn active" onclick="filterNews('ALL',this)">全部</button>
+      <button class="fbtn h"      onclick="filterNews('HIGH',this)">🔴 高风险</button>
+      <button class="fbtn m"      onclick="filterNews('MEDIUM',this)">🟠 中风险</button>
+      <button class="fbtn l"      onclick="filterNews('LOW',this)">🟢 低风险</button>
+      <input class="search-box" type="text" placeholder="搜索标题 / 来源…" oninput="searchNews(this.value)" />
+    </div>
     <div style="overflow-x:auto">
-      <table class="news-table">
+      <table class="dtable" id="newsTable">
         <thead>
           <tr>
-            <th>#</th><th>标题</th><th>来源</th><th>风险</th><th>情绪</th><th>相关国家</th><th>时间 (UTC)</th>
+            <th>#</th><th>标题</th><th>来源</th><th>风险</th><th>情绪</th><th>相关国家</th><th>时间(UTC)</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="newsTbody">
           {news_rows}
         </tbody>
       </table>
     </div>
+    <div id="noResults" style="display:none;text-align:center;padding:24px;color:var(--muted)">无匹配结果</div>
   </div>
 
 </div>
-<footer>NewsAgent MVP · 生成于 {generated_at} · 数据来自 RSS 公开新闻源 · 仅供学习参考，不构成投资或政策建议</footer>
+
+<footer>
+  NewsAgent · 生成于 {generated_at} · 数据来源 RSS 公开新闻源 · 仅供参考，不构成投资或政策建议
+</footer>
+
+<script>
+// ── Chart.js global defaults ──────────────────────────────────────────────
+Chart.defaults.color = '#6a849e';
+Chart.defaults.font.family = "-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif";
+Chart.defaults.font.size = 12;
+
+// ── Risk Donut ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('riskChart'), {{
+  type: 'doughnut',
+  data: {{
+    labels: ['高风险', '中风险', '低风险'],
+    datasets: [{{ data: [{high},{medium},{low}], backgroundColor: ['#f85149','#e3a04f','#3fb950'], borderWidth: 0, hoverOffset: 8 }}]
+  }},
+  options: {{
+    cutout: '72%', plugins: {{ legend: {{ position: 'bottom', labels: {{ padding: 16 }} }}, tooltip: {{ callbacks: {{ label: c => ` ${{c.label}}: ${{c.raw}} (${{(c.raw/{t}*100).toFixed(1)}}%)` }} }} }},
+    animation: {{ animateRotate: true, duration: 900 }}
+  }}
+}});
+
+// ── Country Horizontal Bar ────────────────────────────────────────────────
+new Chart(document.getElementById('countryChart'), {{
+  type: 'bar',
+  data: {{
+    labels: {country_labels},
+    datasets: [{{ label: '提及次数', data: {country_values},
+      backgroundColor: 'rgba(88,166,255,0.7)', borderColor: '#58a6ff', borderWidth: 1, borderRadius: 4
+    }}]
+  }},
+  options: {{
+    indexAxis: 'y',
+    plugins: {{ legend: {{ display: false }} }},
+    scales: {{
+      x: {{ grid: {{ color: '#1e2d3d' }}, ticks: {{ color: '#6a849e' }} }},
+      y: {{ grid: {{ display: false }}, ticks: {{ color: '#d4e1f0' }} }}
+    }},
+    animation: {{ duration: 900 }}
+  }}
+}});
+
+// ── Source Donut ─────────────────────────────────────────────────────────
+new Chart(document.getElementById('sourceChart'), {{
+  type: 'doughnut',
+  data: {{
+    labels: {source_labels},
+    datasets: [{{ data: {source_values},
+      backgroundColor: ['#58a6ff','#3fb950','#e3a04f','#f85149','#bc8cff','#39d5c9'],
+      borderWidth: 0, hoverOffset: 6
+    }}]
+  }},
+  options: {{
+    cutout: '65%', plugins: {{ legend: {{ position: 'bottom', labels: {{ padding: 14 }} }} }},
+    animation: {{ duration: 900 }}
+  }}
+}});
+
+// ── Topic Radar ───────────────────────────────────────────────────────────
+new Chart(document.getElementById('topicChart'), {{
+  type: 'radar',
+  data: {{
+    labels: {topic_labels},
+    datasets: [{{ label: '条目数', data: {topic_values},
+      backgroundColor: 'rgba(188,140,255,0.2)', borderColor: '#bc8cff',
+      borderWidth: 2, pointBackgroundColor: '#bc8cff', pointRadius: 3
+    }}]
+  }},
+  options: {{
+    scales: {{ r: {{ grid: {{ color: '#1e2d3d' }}, angleLines: {{ color: '#1e2d3d' }}, ticks: {{ display: false }} }} }},
+    plugins: {{ legend: {{ display: false }} }},
+    animation: {{ duration: 900 }}
+  }}
+}});
+
+// ── Source Bar ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('sourceBarChart'), {{
+  type: 'bar',
+  data: {{
+    labels: {source_labels},
+    datasets: [{{ label: '条目数', data: {source_values},
+      backgroundColor: ['rgba(57,213,201,.7)','rgba(57,213,201,.55)','rgba(57,213,201,.45)','rgba(57,213,201,.38)','rgba(57,213,201,.3)','rgba(57,213,201,.22)'],
+      borderRadius: 4, borderWidth: 0
+    }}]
+  }},
+  options: {{
+    plugins: {{ legend: {{ display: false }} }},
+    scales: {{
+      x: {{ grid: {{ display: false }}, ticks: {{ color: '#6a849e', maxRotation: 30 }} }},
+      y: {{ grid: {{ color: '#1e2d3d' }}, ticks: {{ color: '#6a849e' }} }}
+    }},
+    animation: {{ duration: 900 }}
+  }}
+}});
+
+// ── News filter & search ──────────────────────────────────────────────────
+function filterNews(level, btn) {{
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const rows = document.querySelectorAll('#newsTbody .nr');
+  let shown = 0;
+  rows.forEach(r => {{
+    const show = level === 'ALL' || r.dataset.risk === level;
+    r.style.display = show ? '' : 'none';
+    if (show) shown++;
+  }});
+  document.getElementById('noResults').style.display = shown ? 'none' : '';
+}}
+
+function searchNews(q) {{
+  const lq = q.toLowerCase();
+  const rows = document.querySelectorAll('#newsTbody .nr');
+  let shown = 0;
+  rows.forEach(r => {{
+    const text = r.textContent.toLowerCase();
+    const show = text.includes(lq);
+    r.style.display = show ? '' : 'none';
+    if (show) shown++;
+  }});
+  document.getElementById('noResults').style.display = shown ? 'none' : '';
+}}
+
+// ── Animate sentiment needle ──────────────────────────────────────────────
+window.addEventListener('load', () => {{
+  const needle = document.getElementById('sentiNeedle');
+  if (needle) {{ needle.style.left = '{senti_pct}%'; }}
+}});
+</script>
 </body>
 </html>"""
