@@ -53,6 +53,17 @@ def _senti_info(score: float) -> tuple[str, str]:
     return "极正面", "#1890ff"
 
 
+def _coverage_badge(n: int) -> str:
+    """Return a small badge showing cross-source coverage count."""
+    if n == 0:
+        return '<span class="cvg cvg0">独家</span>'
+    if n == 1:
+        return f'<span class="cvg cvg1">+{n} 家</span>'
+    if n <= 3:
+        return f'<span class="cvg cvg2">+{n} 家</span>'
+    return f'<span class="cvg cvg3">+{n} 家 🔥</span>'
+
+
 def _news_rows_html(analyzed_items: list[AnalyzedItem], n: int = 30) -> str:
     top = [e for e in analyzed_items if e.risk_level in {"HIGH", "MEDIUM"}][:n]
     if not top:
@@ -70,10 +81,18 @@ def _news_rows_html(analyzed_items: list[AnalyzedItem], n: int = 30) -> str:
         title_esc = html.escape(entry.item.title[:90])
         link = html.escape(entry.item.link)
         risk_cls = entry.risk_level.lower()
+        imp = f"{entry.importance_score:.0f}"
+        cvg = _coverage_badge(entry.cross_source_count)
         rows.append(
             f"""<tr class="nr" data-risk="{entry.risk_level}">
-  <td class="dim">{idx}</td>
-  <td><a href="{link}" target="_blank" class="ntitle">{title_esc}</a></td>
+  <td class="dim" style="text-align:center">
+    <div style="font-weight:700;font-size:.95rem;color:var(--blue)">{imp}</div>
+    <div class="dim" style="font-size:.7rem">重要分</div>
+  </td>
+  <td>
+    <a href="{link}" target="_blank" class="ntitle">{title_esc}</a>
+    <div style="margin-top:3px">{cvg}</div>
+  </td>
   <td class="src">{html.escape(entry.item.source)}</td>
   <td><span class="badge {risk_cls}">{_t_risk(entry.risk_level)}</span></td>
   <td>
@@ -352,7 +371,12 @@ table.dtable tr:hover td {{ background: var(--surface2); }}
 .senti-wrap {{ display: flex; flex-direction: column; gap: 2px; min-width: 80px; }}
 .senti-track {{ height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }}
 .senti-fill  {{ height: 3px; border-radius: 2px; transition: width .4s; }}
-
+/* Coverage badge */
+.cvg {{ display:inline-block; padding:1px 6px; border-radius:3px; font-size:.7rem; font-weight:600; }}
+.cvg0 {{ background:rgba(107,127,150,.15); color:var(--muted); }}
+.cvg1 {{ background:rgba(88,166,255,.12); color:var(--blue); }}
+.cvg2 {{ background:rgba(188,140,255,.15); color:var(--purple); }}
+.cvg3 {{ background:rgba(248,81,73,.15);  color:var(--red); }}
 /* ── FOOTER ── */
 footer {{ text-align: center; color: var(--muted); font-size: .76rem; padding: 32px; border-top: 1px solid var(--border); margin-top: 8px; }}
 footer a {{ color: var(--muted); }}
@@ -502,7 +526,7 @@ footer a {{ color: var(--muted); }}
       <table class="dtable" id="newsTable">
         <thead>
           <tr>
-            <th>#</th><th>标题</th><th>来源</th><th>风险</th><th>情绪</th><th>相关国家</th><th>时间(UTC)</th>
+            <th title="重要分 = 风险分×3 + 跨媒体覆盖数×2">重要分 ↓</th><th>标题 / 覆盖媒体数</th><th>来源</th><th>风险</th><th>情绪</th><th>相关国家</th><th>时间(UTC)</th>
           </tr>
         </thead>
         <tbody id="newsTbody">

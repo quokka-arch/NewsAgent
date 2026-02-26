@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from itertools import combinations
@@ -8,6 +9,19 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from .config import COUNTRY_ALIASES, RISK_KEYWORDS, TOPIC_KEYWORDS
 from .fetcher import NewsItem
+
+_STOPWORDS = {
+    "the", "a", "an", "in", "on", "at", "to", "of", "and", "or", "is", "are",
+    "was", "were", "be", "been", "has", "have", "had", "it", "its", "this",
+    "that", "with", "for", "from", "by", "as", "over", "after", "but", "not",
+    "its", "into", "also", "amid", "says", "say", "said",
+}
+
+
+def _title_kw(title: str) -> frozenset[str]:
+    """Extract significant keywords from a title for similarity comparison."""
+    words = re.findall(r"[a-z]{3,}", title.lower())
+    return frozenset(w for w in words if w not in _STOPWORDS)
 
 
 @dataclass
@@ -18,6 +32,8 @@ class AnalyzedItem:
     risk_level: str
     countries: list[str]
     topics: list[str]
+    cross_source_count: int = 0   # how many distinct OTHER sources covered same story
+    importance_score: float = 0.0  # risk_score*3 + cross_source_count*2
 
 
 def _extract_countries(text: str) -> list[str]:
@@ -56,6 +72,33 @@ def _risk_from_text(text: str, sentiment: float) -> tuple[int, str]:
     return score, "LOW"
 
 
+def _compute_cross_source(analyzed: list[AnalyzedItem]) -> None:
+    """Fill cross_source_count and importance_score for every item.
+
+    For each article, count distinct *other* sources whose title shares
+    ≥30% Jaccard similarity — a proxy for "same event covered by N outlets".
+    """
+    kws = [_title_kw(e.item.title) for e in analyzed]
+    for i, entry in enumerate(analyzed):
+        kw_i = kws[i]
+        if not kw_i:
+            entry.cross_source_count = 0
+        else:
+            seen_sources: set[str] = set()
+            for j, other in enumerate(analyzed):
+                if i == j or other.item.source == entry.item.source:
+                    continue
+                kw_j = kws[j]
+                if not kw_j:
+                    continue
+                inter = len(kw_i & kw_j)
+                union = len(kw_i | kw_j)
+                if union and inter / union >= 0.30:
+                    seen_sources.add(other.item.source)
+            entry.cross_source_count = len(seen_sources)
+        entry.importance_score = round(entry.risk_score * 3 + entry.cross_source_count * 2, 1)
+
+
 def analyze(items: list[NewsItem]) -> list[AnalyzedItem]:
     analyzer = SentimentIntensityAnalyzer()
     analyzed: list[AnalyzedItem] = []
@@ -78,7 +121,12 @@ def analyze(items: list[NewsItem]) -> list[AnalyzedItem]:
             )
         )
 
-    analyzed.sort(key=lambda x: (x.risk_score, x.item.published_at), reverse=True)
+    # Cross-source coverage detection then sort by importance
+    _compute_cross_source(analyzed)
+    analyzed.sort(
+        key=lambda x: (x.importance_score, x.risk_score, x.item.published_at),
+        reverse=True,
+    )
     return analyzed
 
 
